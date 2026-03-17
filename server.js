@@ -1,24 +1,24 @@
 const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
+require("dotenv").config()
 
 const authRoutes = require("./routes/auth")
+const courseRoutes = require("./routes/courses")
+const resultRoutes = require("./routes/results")
 
 const app = express()
 
-app.use(express.json())
 app.use(cors())
-app.use(express.static("public"))
+app.use(express.json())
 
-mongoose.connect("mongodb://127.0.0.1:27017/iberttech", {
- useNewUrlParser: true,
- useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGO_URI)
+.then(()=>console.log("MongoDB Connected"))
 
-.then(()=> console.log("MongoDB Connected"))
+app.use("/api/auth",authRoutes)
+app.use("/api/courses",courseRoutes)
+app.use("/api/results",resultRoutes)
 
-app.use("/api/auth", authRoutes)
-
-app.listen(5000, () => {
- console.log("Server running on port 5000")
+app.listen(process.env.PORT,()=>{
+console.log("Server running")
 })

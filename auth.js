@@ -1,54 +1,43 @@
 const router = require("express").Router()
-const Student = require("../models/Student")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 
-const SECRET = "iberttechsecret"
+const User = require("../models/User")
 
-router.post("/register", async (req,res)=>{
+router.post("/register", async(req,res)=>{
 
- try{
+const hashed = await bcrypt.hash(req.body.password,10)
 
- const {name,email,studentId,password,department} = req.body
+const user = new User({
 
- const hashed = await bcrypt.hash(password,10)
-
- const student = new Student({
-  name,
-  email,
-  studentId,
-  password:hashed,
-  department,
-  courses:["Web Development","Database Systems"],
-  results:[]
- })
-
- await student.save()
-
- res.json({message:"Student Registered"})
-
- }catch(err){
-  res.status(500).json(err)
- }
+name:req.body.name,
+email:req.body.email,
+password:hashed,
+role:req.body.role,
+studentId:req.body.studentId,
+department:req.body.department
 
 })
 
+await user.save()
 
-router.post("/login", async (req,res)=>{
+res.json("User registered")
 
- const {studentId,password} = req.body
+})
 
- const student = await Student.findOne({studentId})
+router.post("/login", async(req,res)=>{
 
- if(!student) return res.status(400).json("Student not found")
+const user = await User.findOne({email:req.body.email})
 
- const valid = await bcrypt.compare(password,student.password)
+if(!user) return res.status(400).json("User not found")
 
- if(!valid) return res.status(400).json("Wrong password")
+const valid = await bcrypt.compare(req.body.password,user.password)
 
- const token = jwt.sign({id:student._id}, SECRET)
+if(!valid) return res.status(400).json("Wrong password")
 
- res.json({token, student})
+const token = jwt.sign({id:user._id},process.env.JWT_SECRET)
+
+res.json({token,user})
 
 })
 
